@@ -49,9 +49,10 @@ stdenv.mkDerivation (finalAttrs: {
   installPhase = ''
     runHook preInstall
 
-    mkdir --parents $out $out/etc/udev/rules.d
+    mkdir --parents $out/etc/udev/rules.d
 
-    cp -a usr/lib/digilent/adept $out/lib
+    cp -a usr etc $out
+    mv $out/usr/lib/digilent/adept $out/lib
 
     cat > $out/etc/digilent-adept.conf <<EOF
     DigilentPath=$out/lib
@@ -59,22 +60,10 @@ stdenv.mkDerivation (finalAttrs: {
 
     cat > $out/etc/udev/rules.d/52-digilent-usb.rules <<EOF
     ACTION=="add", ATTR{idVendor}=="1443", GROUP="plugdev", TAG+="uaccess"
-    ACTION=="add", ATTR{idVendor}=="0403", ATTR{manufacturer}=="Digilent", GROUP="plugdev", TAG+="uaccess", RUN+="$out/lib/udev/dftdrvdtch %s{busnum} %s{devnum}"
+    ACTION=="add", ATTR{idVendor}=="0403", ATTR{manufacturer}=="Digilent", GROUP="plugdev", TAG+="uaccess", RUN+="$out/usr/lib/udev/dftdrvdtch %s{busnum} %s{devnum}"
     EOF
 
     runHook postInstall
-  '';
-
-  dontAutoPatchelf = true;
-
-  postFixup = ''
-    autoPatchelf "$out"
-
-    for lib in $(find "$out/lib" -type f); do
-      lib_rpath="$(patchelf --print-rpath "$lib")"
-      echo "Adding self to RPATH of library $lib"
-      patchelf --set-rpath "$out/lib:$lib_rpath" "$lib"
-    done;
   '';
 
   meta = with lib; {

@@ -95,6 +95,11 @@ stdenv.mkDerivation {
     runHook postInstall
   '';
 
+  postFixup = ''
+    wrapProgram $out/bin/waveforms \
+        --set DIGILENT_DATA_DIR "${adept2-runtime}/usr/share/digilent/adept/data"
+  '';
+
   meta = with lib; {
     description = "Digilent Waveforms";
     homepage = "https://store.digilentinc.com/digilent-waveforms/";
